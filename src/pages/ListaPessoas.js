@@ -13,8 +13,9 @@ class ItemListaPessoa extends Component {
   }
 
   render() {
+    const id = this.props.pessoa.url.replace('http://swapi.co/api/people/','')
     const style = this.props.isDeleted ? { color: 'red' } : {}
-    return (<li style={style}><a onClick={this.handleClick}>{this.props.pessoa.name}</a> <button onClick={this.handleRemove}>X</button></li>)
+    return (<li style={style}><Link to={`/pessoa/${id}`}>{this.props.pessoa.name}</Link> <button onClick={this.handleRemove}>X</button></li>)
   }
 }
 

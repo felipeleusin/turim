@@ -6,6 +6,10 @@ import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom'
 import ListaPessoas from './pages/ListaPessoas'
 import DetalhePessoa from './pages/DetalhePessoa'
 
+function Erro() {
+  return <h3>Erro!</h3>
+}
+
 class App extends Component {
 
   render() {
@@ -20,6 +24,7 @@ class App extends Component {
             <Switch>
               <Route exact path="/" component={ListaPessoas} />
               <Route path="/pessoa/:id" component={DetalhePessoa} />
+              <Route component={Erro} />
             </Switch>
           </Router>
         </div>
