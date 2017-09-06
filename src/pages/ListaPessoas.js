@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { keyBy, map } from 'lodash'
+import qs from 'query-string'
 
 class ItemListaPessoa extends Component {
   handleClick = () => {
@@ -40,7 +41,8 @@ export default class ListaPessoas extends Component {
 
   loadData = () => {
     this.setState({ pessoas: null })
-    fetch(`http://swapi.co/api/people?page=${this.state.page}&search=${this.props.filter}`)
+    const query = qs.stringify({ page: this.state.page, search: qs.parse(this.props.location.search).search || '' })
+    fetch(`http://swapi.co/api/people?${query}`)
     .then((response) => response.json())
     .then((data) => {
       this.setState({ pessoas: keyBy(data.results, 'url') })
@@ -59,13 +61,21 @@ export default class ListaPessoas extends Component {
     this.setState({ page: this.state.page + 1 })
   }
 
+  handleFilterChange = (ev) => {
+    this.props.history.push({ search: `?search=${ev.target.value}` })
+  }
+
   render() {
+    const { location: { search } } = this.props
+    const filter = qs.parse(search).search
+
     return (
       <div>
         {this.state.pessoas === null ? (
           <h2>Carregando...</h2>
         ) : (
           <div>
+            <input type="text" placeholder="Buscar..." onChange={this.handleFilterChange} value={filter} />
             <ul>
               {map(this.state.pessoas, (pessoa) => (
                 <ItemListaPessoa isDeleted={this.state.deleted.includes(pessoa.url)} onRemove={this.handleRemove} onClick={this.props.onPessoaSelected} key={pessoa.url} pessoa={pessoa} />
