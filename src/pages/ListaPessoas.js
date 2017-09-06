@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { keyBy, map } from 'lodash'
+import { keyBy, map, debounce } from 'lodash'
+import { Link } from 'react-router-dom'
 import qs from 'query-string'
 
 class ItemListaPessoa extends Component {
@@ -18,47 +19,32 @@ class ItemListaPessoa extends Component {
 }
 
 export default class ListaPessoas extends Component {
-  state = { pessoas: null, deleted: [], page: 1  }
+  state = { pessoas: null, deleted: []  }
 
   componentDidMount() {
     this.loadData()
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.filter !== this.props.filter) {
-      this.setState({ page: 1 })
-    }
-  }
-
   componentDidUpdate(prevProps, prevState) {
-    if (
-      (prevProps.filter !== this.props.filter) ||
-      (prevState.page !== this.state.page)
-    ) {
-      this.loadData()
+    if (this.props.location.search !== prevProps.location.search) {
+      this.debouceLoad()
     }
   }
 
   loadData = () => {
     this.setState({ pessoas: null })
-    const query = qs.stringify({ page: this.state.page, search: qs.parse(this.props.location.search).search || '' })
-    fetch(`http://swapi.co/api/people?${query}`)
+    const { page = 1, search = '' } = qs.parse(this.props.location.search)
+    fetch(`http://swapi.co/api/people?${qs.stringify({ page, search })}`)
     .then((response) => response.json())
     .then((data) => {
       this.setState({ pessoas: keyBy(data.results, 'url') })
     })
   }
 
+  debouceLoad = debounce(this.loadData, 250)
+
   handleRemove = (pessoa) => {
     this.setState((prevState) => ({ deleted: [...prevState.deleted, pessoa.url] }))
-  }
-
-  handlePrevious = () => {
-    this.setState({ page: this.state.page - 1 })
-  }
-
-  handleNext = () => {
-    this.setState({ page: this.state.page + 1 })
   }
 
   handleFilterChange = (ev) => {
@@ -66,25 +52,26 @@ export default class ListaPessoas extends Component {
   }
 
   render() {
-    const { location: { search } } = this.props
-    const filter = qs.parse(search).search
+    const query = qs.parse(this.props.location.search)
+    const search = query.search || ''
+    const page = parseInt(query.page, 10) || 1
 
     return (
       <div>
+        <input type="text" placeholder="Buscar..." onChange={this.handleFilterChange} value={search} />
         {this.state.pessoas === null ? (
           <h2>Carregando...</h2>
         ) : (
           <div>
-            <input type="text" placeholder="Buscar..." onChange={this.handleFilterChange} value={filter} />
             <ul>
               {map(this.state.pessoas, (pessoa) => (
                 <ItemListaPessoa isDeleted={this.state.deleted.includes(pessoa.url)} onRemove={this.handleRemove} onClick={this.props.onPessoaSelected} key={pessoa.url} pessoa={pessoa} />
               ))}
             </ul>
-            {this.state.page > 1 && (
-              <button onClick={this.handlePrevious}>Anterior</button>
+            {page > 1 && (
+              <Link to={{ search: `?${qs.stringify({ search, page: page - 1 })}` }}>Anterior</Link>
             )}
-            <button onClick={this.handleNext}>Próxima</button>
+            <Link to={{ search: `?${qs.stringify({ search, page: page + 1 })}` }}>Próxima</Link>
             {this.state.deleted.length > 0 && (
               <div>
               <h4>A Remover:</h4>
