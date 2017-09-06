@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { keyBy, map } from 'lodash'
 
 class ItemListaPessoa extends Component {
   handleClick = () => {
@@ -42,7 +43,7 @@ export default class ListaPessoas extends Component {
     fetch(`http://swapi.co/api/people?page=${this.state.page}&search=${this.props.filter}`)
     .then((response) => response.json())
     .then((data) => {
-      this.setState({ pessoas: data.results })
+      this.setState({ pessoas: keyBy(data.results, 'url') })
     })
   }
 
@@ -66,7 +67,7 @@ export default class ListaPessoas extends Component {
         ) : (
           <div>
             <ul>
-              {this.state.pessoas.map((pessoa) => (
+              {map(this.state.pessoas, (pessoa) => (
                 <ItemListaPessoa isDeleted={this.state.deleted.includes(pessoa.url)} onRemove={this.handleRemove} onClick={this.props.onPessoaSelected} key={pessoa.url} pessoa={pessoa} />
               ))}
             </ul>
@@ -74,6 +75,14 @@ export default class ListaPessoas extends Component {
               <button onClick={this.handlePrevious}>Anterior</button>
             )}
             <button onClick={this.handleNext}>Próxima</button>
+            {this.state.deleted.length > 0 && (
+              <div>
+              <h4>A Remover:</h4>
+              <ul>{this.state.deleted.map((url) => (
+                <li>{this.state.pessoas[url].name}</li>
+              ))}</ul>
+              </div>
+            )}
           </div>
         )}
       </div>
